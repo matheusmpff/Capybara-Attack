@@ -41,6 +41,22 @@ playerPosY: var #1
 playerDir: var #1
 
 
+; quando a posicao eh 100, capivara nao esta viva ainda
+capivarasPosX: var #5
+	static capivarasPosX + #0, #100
+	static capivarasPosX + #1, #100
+	static capivarasPosX + #2, #100
+	static capivarasPosX + #3, #100
+	static capivarasPosX + #4, #100
+capivarasPosY: var #5
+	static capivarasPosY + #0, #100
+	static capivarasPosY + #1, #100
+	static capivarasPosY + #2, #100
+	static capivarasPosY + #3, #100
+	static capivarasPosY + #4, #100
+
+capivarasDir: var #5
+
 
 main:
 	call apagaTela
@@ -69,17 +85,29 @@ resetTimer:
 		jeq endGame
 
 	skipPlayer:
-		inc r7
-		loadn r0, #32000
-		cmp r7, r0
-		jeq resetTimer
+
+	; capivara spawn
+
+	loadn r0, #49999
+	cmp r7, r0
+	jne skipCapivaraSpawn
+
+	call capivaraSpawn
+
+	skipCapivaraSpawn:
+
+	; reseta o timer global
+	inc r7
+	loadn r0, #50000
+	cmp r7, r0
+	jeq resetTimer
 
 	jmp playerControlLoop
 
+
+
 	endGame:
-
 	halt
-
 
 ;--
 
@@ -351,3 +379,45 @@ printErrHalt: ; Printa uma msg de erro no meio da tela e para o programa
 	loadn r2, #0
 	call printStr
 	halt
+
+;--
+
+
+capivaraSpawn:
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+	push r5
+
+	loadn r0, #0 ; int i do for lop
+	loadn r2, #capivarasPosX ; array das capivaras
+	loadn r5, #100 ; capivara para spawnar (100 == nenhuma)
+
+capivaraSpawnTryNext:
+	add r3, r2, r0 ; capivara[i]
+	loadi r3, r3 ; r3 = capivara[i]
+
+	cmp r3, r5
+	jne capiSpawnTnElse
+	; se capivara[i] eh 100, ela deve spawnar
+	mov r5, r0
+	jmp capiSpawnTnexit
+
+
+capiSpawnTnElse:
+	loadn r1, #4
+	cmp r0, r1
+	inc r0
+	jle capivaraSpawnTryNext
+
+capiSpawnTnExit:
+
+	pop r5
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
