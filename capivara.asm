@@ -71,7 +71,7 @@ resetTimer:
 	playerControlLoop:
 
 
-		; apenas move o jogador a cada 50 loops
+		; apenas move o jogador a cada 100 loops
 		loadn r0, #100
 		mod r0, r7, r0
 		cmp r7, r0
@@ -88,7 +88,7 @@ resetTimer:
 
 	; capivara spawn
 
-	loadn r0, #49999
+	loadn r0, #16000
 	cmp r7, r0
 	jne skipCapivaraSpawn
 
@@ -304,37 +304,9 @@ movePlayerPrint:
 	load r0, playerPosX
 	load r1, playerPosY
 	load r2, playerDir
+	loadn r3, #265 ; cacador + marrom
 
-	load r3, numCharLine
-	mul r1, r1, r3 ; num de pixels para mover na vertical
-	add r0, r0, r1 ; posicao absoluta do jogador
-
-	loadn r1, #257 ; capivara + marrom
-
-	loadn r4, #4
-	; se a direcao for right (0), nao muda
-	; se a direcao for left (1), soma 4 ao char
-	mul r4, r4, r2
-	add r1, r1, r4
-
-	outchar r1, r0
-
-	; imprime superior direito
-	inc r0
-	inc r1
-	outchar r1, r0
-
-	; imprime inferior direito
-	add r0, r0, r3
-	inc r1
-	inc r1
-	outchar r1, r0
-
-	; imprime inferior esquerdo
-	dec r0
-	dec r1
-	outchar r1, r0
-
+	call printPersonagem
 	rts
 ;--
 
@@ -392,28 +364,112 @@ capivaraSpawn:
 	push r5
 
 	loadn r0, #0 ; int i do for lop
-	loadn r2, #capivarasPosX ; array das capivaras
-	loadn r5, #100 ; capivara para spawnar (100 == nenhuma)
-
-capivaraSpawnTryNext:
-	add r3, r2, r0 ; capivara[i]
-	loadi r3, r3 ; r3 = capivara[i]
-
-	cmp r3, r5
-	jne capiSpawnTnElse
-	; se capivara[i] eh 100, ela deve spawnar
-	mov r5, r0
-	jmp capiSpawnTnexit
-
-
-capiSpawnTnElse:
 	loadn r1, #4
-	cmp r0, r1
-	inc r0
-	jle capivaraSpawnTryNext
+	loadn r2, #capivarasPosX ; array das capivaras
+	loadn r3, #capivarasPosY
+	loadn r4, #100 ; capivara para spawnar (100 == nenhuma)
 
-capiSpawnTnExit:
+	capivaraSpawnTryNext:
+		add r5, r2, r0 ; capivara[i]
+		loadi r5, r5 ; r5 = capivara[i]
 
+		cmp r5, r4
+		jne capiSpawnTnElse
+		; se capivara[i] eh 100, ela deve spawnar
+		jmp capiSpawnTnExit
+
+
+	capiSpawnTnElse:
+		cmp r0, r1 ; compara i com 4
+		inc r0
+		jle capivaraSpawnTryNext
+
+		jmp capiSpawnExit
+
+	capiSpawnTnExit:
+
+		; endereco para guardar a pos da capivara a ser spawnada
+		add r2, r2, r0 ; capivarasPosX[i]
+		add r3, r3, r0 ; capivarasPosY[i]
+		loadn r5, #capivarasDir
+		add r5, r5, r0
+
+		; switch da capivara
+		cmp r0, r1
+		jeq spawn4
+		loadn r1, #3
+		cmp r0, r1
+		jeq spawn3
+		loadn r1, #2
+		cmp r0, r1
+		jeq spawn2
+		loadn r1, #1
+		cmp r0, r1
+		jeq spawn1
+		loadn r1, #0
+		cmp r0, r1
+		jeq spawn0
+
+		; execucao nao deve chegar aqui
+		call printErrHalt
+
+	spawn4:
+		loadn r0, #12
+		load r1, numCharColumn
+		dec r1
+		dec r1
+		storei r2, r0
+		storei r3, r1
+		loadn r2, #0 ; direção
+		storei r2, r5
+		jmp capiSpawnBreak
+
+	spawn3:
+		loadn r0, #28
+		load r1, numCharColumn
+		dec r1
+		dec r1
+		storei r2, r0
+		storei r3, r1
+		loadn r2, #1 ; direção
+		storei r2, r5
+		jmp capiSpawnBreak
+
+	spawn2:
+		load r0, numCharLine
+		dec r0
+		dec r0
+		loadn r1, #15
+		storei r2, r0
+		storei r3, r1
+		loadn r2, #1 ; direção
+		storei r2, r5
+		jmp capiSpawnBreak
+
+	spawn1:
+		loadn r0, #20
+		loadn r1, #0
+		storei r2, r0
+		storei r3, r1
+		loadn r2, #0 ; direção
+		storei r2, r5
+		jmp capiSpawnBreak
+
+	spawn0:
+		loadn r0, #0
+		loadn r1, #15
+		dec r1
+		storei r2, r0
+		storei r3, r1
+		loadn r2, #0 ; direção
+		storei r2, r5
+		jmp capiSpawnBreak
+
+	capiSpawnBreak:
+		loadn r3, #257 ; capivara marrom
+		call printPersonagem
+
+capiSpawnExit:
 	pop r5
 	pop r4
 	pop r3
@@ -421,3 +477,54 @@ capiSpawnTnExit:
 	pop r1
 	pop r0
 	rts
+
+
+
+; printa um quadrado de caracteres
+; são quatro caracteres seguidos em que o primeiro é o superior esquerdo
+; o segundo é o superior direito, terceiro é inferior esq. e 4rto é inf. dir.
+; além disso, há mais quatro char após eles para a outra direção
+; r0 = posX ; r1 = posY ; r2 = dir ; r3 = primeiro caracter
+printPersonagem: 
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+
+	load r4, numCharLine
+	mul r1, r1, r4 ; num de pixels para mover na vertical
+	add r0, r0, r1 ; posicao absoluta do jogador
+
+
+	loadn r1, #4
+	; se a direcao for right (0), nao muda
+	; se a direcao for left (1), soma 4 ao char
+	mul r1, r1, r2
+	add r3, r3, r1
+
+	outchar r3, r0
+
+	; imprime superior direito
+	inc r0
+	inc r3
+	outchar r3, r0
+
+	; imprime inferior direito
+	add r0, r0, r4
+	inc r3
+	inc r3
+	outchar r3, r0
+
+	; imprime inferior esquerdo
+	dec r0
+	dec r3
+	outchar r3, r0
+
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+;--
