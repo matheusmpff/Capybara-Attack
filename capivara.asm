@@ -29,6 +29,8 @@ numCharColumn: var #1
 
 startMsg: string "Aperte ENTER para comecar"
 
+morteMsg: string "Voce morreu. Aperte ENTER para recomecar"
+
 msgErr: string "Ocorreu um erro"
 
 playerPosX: var #1
@@ -62,6 +64,8 @@ main:
 	call apagaTela
 	call waitUserStart
 
+iniciarJogo:
+	call initializeVariables
 	call apagaTela
 	call movePlayerPrint
 
@@ -74,21 +78,20 @@ resetTimer:
 		; apenas move o jogador a cada 100 loops
 		loadn r0, #100
 		mod r0, r7, r0
-		cmp r7, r0
+		loadn r1, #0
+		cmp r1, r0
 		jne skipPlayer
 
 		call movePlayer
 
-		load r0, playerPosX
-		loadn r1, #0
-		cmp r0, r1
-		jeq endGame
+		call colisaoMorte
+
 
 	skipPlayer:
 
 	; capivara spawn
 
-	loadn r0, #16000
+	loadn r0, #40000
 	cmp r7, r0
 	jne skipCapivaraSpawn
 
@@ -102,11 +105,27 @@ resetTimer:
 	cmp r7, r0
 	jeq resetTimer
 
+	; pausa para deixar o programa mais lento
+	loadn r0, #0
+	loadn r1, #5000
+	slowDownLoop:
+		inc r0
+		cmp r0, r1
+		jne slowDownLoop
+
+
 	jmp playerControlLoop
 
 
 
 	endGame:
+
+	call waitUserStart ; recebe em r0 o input
+
+	loadn r1, #'e' ; exit
+	cmp r0, r1
+	jne iniciarJogo
+
 	halt
 
 ;--
@@ -131,13 +150,43 @@ apagaTela:
 	pop r0
 	rts
 
-
 ;--
 
 
+;; reinicializa as posições de memória com os valores iniciais delas
+initializeVariables:
+	loadn r0, #20
+	store playerPosX, r0
+	loadn r0, #15
+	store playerPosY, r0
+
+	loadn r0, #0 ; i - iterador
+	loadn r1, #5
+	loadn r2, #capivarasPosX
+	loadn r3, #capivarasPosY
+	loadn r6, #100 ; valor inicial das posições das capivaras
+
+	capivaraInitializeLoop:
+		cmp r0, r1 ; while i < 5
+		jeq initializeExit
+
+		add r4, r2, r0 ; capivarasPosX[i]
+		add r5, r3, r0 ; capivarasPosY[i]
+		storei r4, r6 ; capiPosX[i] = 100
+		storei r5, r6 ; capiPosY[i] = 100
+
+		inc r0 ; i++
+		jmp capivaraInitializeLoop
+	initializeExit:
+	rts
+;--
+
+
+;; espera o usuario digitar ENTER ou 'e' para iniciar ou parar o jogo
+;; retorna em r0 o input
 waitUserStart:
-	push r0
 	push r1
+	push r2
 
 	loadn r1, #startMsg	; mensagem
 	loadn r0, #968		; posicao da tela
@@ -145,13 +194,17 @@ waitUserStart:
 	call printStr
 
 	loadn r1, #13 ; tecla ENTER
+	loadn r2, #'e' ; exit
 	waitUserStartLoop:
 		call nextInputKey ; r0 recebe a proxima tecla do usuario
 		cmp r0, r1
+		jeq waitUserStartExit
+		cmp r0, r2
 		jne waitUserStartLoop
 
+	waitUserStartExit:
+	pop r2
 	pop r1
-	pop r0
 	rts
 
 
@@ -282,7 +335,7 @@ playerMoveNoMove:
 
 		dec r2
 		store playerPosX, r2
-		loadn r2, #0 ; dir right = 0
+		loadn r2, #1 ; dir right = 1
 		store playerDir, r2
 		jmp movePlayerBreak
 
@@ -295,7 +348,7 @@ playerMoveNoMove:
 		jeq movePlayerBreak
 
 		store playerPosX, r2
-		loadn r2, #1 ; dir left = 1
+		loadn r2, #0 ; dir left = 0
 		store playerDir, r2
 		jmp movePlayerBreak
 
@@ -304,7 +357,7 @@ movePlayerPrint:
 	load r0, playerPosX
 	load r1, playerPosY
 	load r2, playerDir
-	loadn r3, #265 ; cacador + marrom
+	loadn r3, #3081 ; cacador + azul
 
 	call printPersonagem
 	rts
@@ -528,3 +581,89 @@ printPersonagem:
 	pop r0
 	rts
 ;--
+
+
+colisaoMorte:
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+	push r5
+
+	loadn r0, #0 ; i - iterador
+	loadn r1, #5 ; numero de capivaras
+	load r2, playerPosX
+	load r3, playerPosY
+
+	loopColisaoMorte:
+		cmp r0, r1 ; while i < 5
+		jeq exitColisaoMorte
+
+		loadn r4, #capivarasPosX
+		loadn r5, #capivarasPosY
+		add r4, r4, r0
+		add r5, r5, r0
+		loadi r4, r4 ; r4 = capivarasPosX[i]
+		loadi r5, r5 ; r5 = capivarasPosY[i]
+
+		; teste das colisoes
+		; testando se um dos Ys é igual
+		inc r5
+		cmp r3, r5 ; lado de baixo da capivara com de cima do homem
+		dec r5
+		jeq colisaoMorteTestaX
+		cmp r3, r5 ; um no meio do outro na coordenada Y
+		jeq colisaoMorteTestaX
+		inc r3
+		cmp r3, r5 ; lado de cima da capivara com de baixo do homem
+		dec r3
+		jeq colisaoMorteTestaX
+
+		jmp continueLoopColisaoMorte
+
+	colisaoMorteTestaX:
+		cmp r2, r4 ; um no meio do outro na coordenada X
+		jeq colisaoMatar
+		inc r2
+		cmp r2, r4 ; lado esquerdo da capivara com direito do homem
+		dec r2
+		jeq colisaoMatar
+		inc r4
+		cmp r2, r4 ; lado direito da capivara com esquerdo do homem
+		dec r4
+		jeq colisaoMatar
+
+
+	continueLoopColisaoMorte:
+		inc r0 ; i++
+		jmp loopColisaoMorte
+
+	exitColisaoMorte:
+
+	pop r5
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+
+colisaoMatar:
+	pop r5
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	
+	call apagaTela
+	loadn r0, #968 ; posicao na tela
+	loadn r1, #morteMsg ; string
+	loadn r2, #2304 ; cor
+	call printStr
+	jmp endGame
+
+;--
+
+
