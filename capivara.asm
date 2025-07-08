@@ -41,8 +41,14 @@ playerPosY: var #1
 ; PARA TODOS OS PERSONAGENS: dir -> left = 1 ; right = 0 ;
 
 playerDir: var #1
+	
+tiroPosX: var #1
+tiroPosY: var #1
+tiroFlag: var #1
 
-
+posicaoMaca: var #1
+	static posicaoMaca + #0,#0
+pontuacao: var #1
 ; quando a posicao eh 100, capivara nao esta viva ainda
 capivarasPosX: var #5
 	static capivarasPosX + #0, #100
@@ -112,7 +118,8 @@ skipCapivara:
 	call capivaraSpawn
 
 	skipCapivaraSpawn:
-
+	call gerarMaca
+	call pegarMaca
 	; reseta o timer global
 	inc r7
 	loadn r0, #50000
@@ -916,3 +923,180 @@ moveSCapiYParado:
 	pop r0
 	rts
 ;--
+
+gerarTiro:
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+	push r5
+	
+	load r0,playerPosX
+	load r1,playerPosY
+	load r3,playerDir
+	inc r0;para não apagar o jogador
+	
+	store tiroPosX, r0
+	store tiroPosY, r1
+	
+	load r4, numCharLine
+	mul r1, r1, r4 ; num de pixels para mover na vertical
+	add r0, r0, r1 ; posicao absoluta do tiro
+	
+	loadn r5, #0
+	cmp r3,r5
+	jeq moveBulletRight
+	
+	moveBulletLeft:
+		loadn r2,#0
+		call apagaTiro
+		dec r0 ; muda posicao
+		load r1,tiroPosY
+		loadn r4, #40
+		mul r1,r1,r4
+		cmp r1,r0
+		jeq gerarTiroExit
+		loadn r2,#'-'
+		call desenhaTiro
+		call delay
+		jmp moveBulletLeft
+		
+	
+	moveBulletRight:
+		loadn r2,#0
+		call apagaTiro
+		inc r0;; mudanca da posicao
+		load r1,tiroPosY
+		inc r1
+		loadn r4, #40
+		mul r1,r1,r4
+		cmp r1,r0
+		jeq gerarTiroExit
+		loadn r2,#'-'
+		call desenhaTiro
+		call delay
+		jmp moveBulletRight
+	gerarTiroExit:		
+	pop r5
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	
+	rts
+
+
+apagaTiro:
+	outchar r2, r0      ; r2 a letra e r0 posição
+	rts
+
+	
+desenhaTiro:
+	outchar r2,r0
+	rts
+
+
+
+delay: 
+	push r0
+	push r1
+	
+	loadn r1, #10
+	Delay_loop2:
+	loadn r0, #64000
+	Delay_loop1:
+		dec r0
+		jnz Delay_loop1
+	dec r1
+	jnz Delay_loop2
+	
+	pop r1
+	pop r0
+	rts
+
+gerarMaca:
+	push r1
+	push r2
+	push r3
+	push r4
+	
+	
+	
+	;logica para aparecer a maca
+	loadn r3, #0	
+	loadn r1, #2011
+	mod r1, r7, r1
+	
+	cmp r1,r3
+	jne gerarMacaFim
+	;apaga a maca 
+	load r2, posicaoMaca
+	loadn r4, #2000
+	cmp r2, r4
+	jeq semApagar
+	outchar r3,r2;
+	semApagar:
+	;logica de mostrar a maca 
+	loadn r3,#1200;numero de bytes para achar a posicao de gerar a maca
+	mod r4,r7,r3
+	
+	store posicaoMaca, r4; atualiza a posicao da maca
+	
+	loadn r3,#24 ;char da maca	
+	outchar r3,r4
+	gerarMacaFim:
+	pop r4
+	pop r3
+	pop r2 
+	pop r1
+	
+	rts
+	
+pegarMaca:
+	push r1
+	push r2
+	push r3
+	push r4
+		
+	load r1, pontuacao
+	;posicao absoluta do player que sera em r2
+	load r2, playerPosX
+	load r3, playerPosY
+	loadn r4, #40
+	mul r3,r3,r4
+	add r2,r2,r3
+	;comparacao com a posicao da maca
+	load r4, posicaoMaca
+	cmp r2, r4
+	jeq pegarMacaSim
+	load r3, numCharLine
+	add r2,r2,r3
+	cmp r2, r4
+	jeq pegarMacaSim
+	inc r2
+	cmp r2, r4
+	jeq pegarMacaSim
+	sub r2,r2,r3
+	cmp r2, r4
+	jeq pegarMacaSim
+	pegarMacaFim:
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	rts
+	
+	pegarMacaSim:
+	;logica de aumentar a pontuacao
+	loadn r4, #10
+	add r1,r1,r4
+	store pontuacao, r1
+	;Logica para apagar a maca daquela posicao
+	outchar r1,r4
+	loadn r4, #2000
+	store posicaoMaca,r4
+	jmp pegarMacaFim
+
+	
