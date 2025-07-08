@@ -92,7 +92,7 @@ resetTimer:
 controlLoop:
 
 	; lidar com o movimento do tiro
-	loadn r0, #30
+	loadn r0, #20
 	mod r0, r7, r0
 	loadn r1, #0
 	cmp r1, r0
@@ -104,13 +104,13 @@ skipTiro:
 
 	; apenas move o jogador a cada 100 loops
 
-	loadn r0, #100
+	loadn r0, #90
 	mod r0, r7, r0
 	loadn r1, #0
 	cmp r1, r0
 	jne skipPlayer
 
-	inchar r0
+	call inputFPGA ; retorna em r0 o input
 	store teclaApertada, r0
 
 	loadn r1, #32
@@ -132,7 +132,7 @@ skipPlayer:
 
 	; capivara move a cada 1000 loops
 
-	loadn r0, #1000
+	loadn r0, #200
 	mod r0, r7, r0
 	loadn r1, #0
 	cmp r1, r0
@@ -146,7 +146,7 @@ skipCapivara:
 
 	; capivara spawn
 
-	loadn r0, #5000
+	loadn r0, #800
 	cmp r7, r0
 	jne skipCapivaraSpawn
 
@@ -185,6 +185,25 @@ endGame:
 	jne iniciarJogo
 
 	halt
+;--
+
+
+inputFPGA:
+	push r1
+	push r2
+
+	inchar r1
+	mov r0, r1
+
+	loadn r2, #255
+inputFPGALoop:
+	inchar r1
+	cmp r1, r2
+	jne inputFPGALoop
+
+	pop r2
+	pop r1
+	rts
 ;--
 
 
