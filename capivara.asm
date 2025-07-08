@@ -165,7 +165,7 @@ skipCapivara:
 
 	; pausa para deixar o programa mais lento
 	loadn r0, #0
-	loadn r1, #5000
+	loadn r1, #500
 	slowDownLoop:
 		inc r0
 		cmp r0, r1
