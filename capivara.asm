@@ -627,7 +627,7 @@ colisaoMorte:
 		cmp r3, r5 ; lado de baixo da capivara com de cima do homem
 		dec r5
 		jeq colisaoMorteTestaX
-		cmp r3, r5 ; um no meio do outro na coordenada Y
+		cmp r3, r5
 		jeq colisaoMorteTestaX
 		inc r3
 		cmp r3, r5 ; lado de cima da capivara com de baixo do homem
@@ -637,11 +637,11 @@ colisaoMorte:
 		jmp continueLoopColisaoMorte
 
 	colisaoMorteTestaX:
-		cmp r2, r4 ; um no meio do outro na coordenada X
-		jeq colisaoMatar
 		inc r2
 		cmp r2, r4 ; lado esquerdo da capivara com direito do homem
 		dec r2
+		jeq colisaoMatar
+		cmp r2, r4
 		jeq colisaoMatar
 		inc r4
 		cmp r2, r4 ; lado direito da capivara com esquerdo do homem
@@ -707,7 +707,6 @@ moveCapivaras:
 		cmp r0, r1 ; while i < 5
 		inc r0
 		jne moveCapiLoop
-
 	
 	pop r4
 	pop r3
@@ -715,6 +714,7 @@ moveCapivaras:
 	pop r1
 	pop r0
 	rts
+
 
 ; r0 = número da capivara
 moveSingleCapi:
@@ -724,117 +724,190 @@ moveSingleCapi:
 	push r3
 	push r4
 	push r5
+	push r6
+	push r7
 
 
-	mov r5, r0
-	loadn r0, #capivarasPosX
-	add r0, r0, r5
-	loadi r0, r0; r0 = posX
-	loadn r1, #capivarasPosY
-	add r1, r1, r5
-	loadi r1, r1 ; r1 = posY
+	loadn r1, #capivarasPosX ; const
+	loadn r2, #capivarasPosY ; const
+
+	add r3, r1, r0
+	add r4, r2, r0
+
+	loadi r3, r3; r3 = capivarasPosX[i]
+	loadi r4, r4 ; r4 = capivarasPosY[i]
+
+	mov r6, r0
+	mov r7, r1
+	mov r0, r3 ; r0 = posX
+	mov r1, r4 ; r1 = posY
+
 	call apagaQuadrado
-	mov r0, r5
+	mov r0, r6
+	mov r1, r7
 
-	loadn r1, #capivarasPosX
-	loadn r4, #capivarasDir
+	; novo x previsto
+	loadn r6, #capivarasDir
+	add r6, r6, r0 ; r6 = &capiDir[i]
 
-	add r2, r0, r1 ; r2 = &capiPosX[i]
-	loadi r2, r2 ; r2 = capivarasPosX[i]
+	load r5, playerPosX
+	cmp r3, r5
+	jle moveSCapiDireita
+	jeq moveSCapiXParado
 
-	add r4, r4, r0 ; r4 = &capiDir[i]
-	loadi r5, r4 ; r5 = capiDir[i]
-	
-	load r3, playerPosX
-	
-	cmp r2, r3
-	jle capiMoverDireita ; se capiPosX < playerPosX
-	jeq capiXParado ; se capiPosX == playerPosX
+	; tenta mover esquerda
+	dec r3
+	loadn r7, #1 ; direcao esquerda
+	storei r6, r7
+	jmp moveSCapiXParado
 
-	; se capi PosX > playerPosX, mover esquerda
-	dec r2
+moveSCapiDireita:
 
-	; apenas move se não há nenhuma outra capivara no lugar
-	; testeColisaoCapis retorna r2 = 100 se nao pode mover
-	call testeColisaoCapisDir
-	loadn r3, #100
-	cmp r2, r3
-	jeq capiXParado
+	; tenta mover direita
+	inc r3
+	loadn r7, #0 ; direcao direita
+	storei r6, r7
 
-	add r1, r1, r0 ; &capiPosX[i]
-	storei r1, r2 ; capiPosX[i]--
+moveSCapiXParado:
 
-	loadn r1, #1
-	storei r4, r1 ; dir esquerda
-	jmp capiXParado
+	; testando colisao em X
+	; r3 = novo capiPosX[i]
+	; r4 = capiPosY[i]
 
-capiMoverDireita:
-	inc r2
+	; só pode colidir se já estiver no mesmo Y
+	loadn r5, #0 ; r5 = j
+	loadn r6, #5
+	colisaoXCapi:
+		cmp r5, r0 ; nao pode analisar a capivara consigo mesma
+		jeq colisaoXCapiContinue
 
-	; apenas move se não há nenhuma outra capivara no lugar
-	; testeColisaoCapis retorna r2 = 100 se nao pode mover
-	call testeColisaoCapisDir
-	loadn r3, #100
-	cmp r2, r3
-	jeq capiXParado
+		add r7, r2, r5
+		loadi r7, r7 ; capiPosY[j]
+		
+		inc r7
+		cmp r4, r7
+		dec r7
+		jeq podeColidirNoX
+		cmp r4, r7
+		jeq podeColidirNoX
+		inc r4
+		cmp r4, r7
+		dec r4
+		jne colisaoXCapiContinue
 
-	add r1, r1, r0 ; &capiPosX[i]
-	storei r1, r2 ; capiPosX[i]++
+	podeColidirNoX:
+		add r7, r1, r5
+		loadi r7, r7 ; capiPosX[j]
 
-	loadn r1, #0
-	storei r4, r1
+		inc r3
+		cmp r3, r7
+		dec r3
+		jeq colideNoX
+		inc r7
+		cmp r3, r7
+		dec r7
+		jne colisaoXCapiContinue
 
-capiXParado:
-	
-	; mover em Y
-	loadn r1, #capivarasPosY
-	add r2, r1, r0 ; &capivarasPosY[i]
-	loadi r2, r2 ; capiPosY[i]
+	colideNoX:
+		add r3, r1, r0
+		loadi r3, r3 ; r3 = posX original
+		loadn r5, #4 ; break para sair do loop
+		
 
-	load r3, playerPosY
+	colisaoXCapiContinue:
+		inc r5
+		cmp r5, r6 ; while r5 != 5
+		jne colisaoXCapi
 
-	cmp r2, r3
-	jle capiMoverBaixo
-	jeq capiYParado
+	;saiu do loop
 
-	;mover cima
-	dec r2
+	; novo y previsto
 
-	call testeColisaoCapisDir
-	loadn r3, #100
-	cmp r3, r2
-	jeq capiYParado
+	load r5, playerPosY
+	cmp r4, r5
+	jle moveSCapiBaixo
+	jeq moveSCapiYParado
 
-	add r1, r1, r0
-	storei r1, r2
-	jmp capiYParado
+	; tenta mover cima
+	dec r4
+	jmp moveSCapiYParado
 
-capiMoverBaixo:
-	inc r2
+moveSCapiBaixo:
 
-	call testeColisaoCapisDir
-	loadn r3, #100
-	cmp r3, r2
-	jeq capiYParado
+	;tenta mover baixo
+	inc r4
 
-	add r1, r1, r0
-	storei r1, r2
+moveSCapiYParado:
 
-capiYParado:
+	; testando colisao em Y
+	; r3 = capiPosX[i]
+	; r4 = novo capiPosY[i]
 
-	loadn r1, #capivarasPosY
-	add r1, r1, r0
-	loadi r1, r1 ; r1 = capiPosY[i]
-	loadn r2, #capivarasDir
-	add r2, r2, r0
-	loadi r2, r2 ; r2 = capiDir[i]
-	loadn r3, #capivarasPosX
-	add r3, r3, r0
-	loadi r0, r3 ; r0 = capiPosX[i]
-	loadn r3, #257 ; r3 = primeiro caractere = capivara marrom
+	; só pode colidir se já estiver no mesmo X
+	loadn r5, #0 ; r5 = j
+	loadn r6, #5
+	colisaoYCapi:
+		cmp r5, r0 ; nao pode analisar a capivara consigo mesma
+		jeq colisaoYCapiContinue
 
+		add r7, r1, r5
+		loadi r7, r7 ; capiPosX[j]
+		
+		inc r7
+		cmp r3, r7
+		dec r7
+		jeq podeColidirNoY
+		cmp r3, r7
+		jeq podeColidirNoY
+		inc r3
+		cmp r3, r7
+		dec r3
+		jne colisaoYCapiContinue
+
+	podeColidirNoY:
+		add r7, r2, r5
+		loadi r7, r7 ; capiPosY[j]
+
+		inc r4
+		cmp r4, r7
+		dec r4
+		jeq colideNoY
+		inc r7
+		cmp r4, r7
+		dec r7
+		jne colisaoYCapiContinue
+
+	colideNoY:
+		add r4, r2, r0
+		loadi r4, r4 ; r4 = posY original
+		loadn r5, #4 ; break para sair do loop
+
+	colisaoYCapiContinue:
+		inc r5
+		cmp r5, r6 ; while r5 != 5
+		jne colisaoYCapi
+
+	;saiu do loop
+
+	; atualiza as posições
+	add r1, r1, r0 ; &posX[i]
+	add r2, r2, r0 ; &posY[i]
+	storei r1, r3
+	storei r2, r4
+
+	loadn r7, #capivarasDir
+	add r7, r7, r0
+	loadi r7, r7
+
+	mov r0, r3 ; r0 = posX
+	mov r1, r4 ; r1 = posY
+	mov r2, r7 ; r2 = dir
+	loadn r3, #257 ; r3 = capivara marrom
 	call printPersonagem
 
+
+	pop r7
+	pop r6
 	pop r5
 	pop r4
 	pop r3
@@ -842,49 +915,4 @@ capiYParado:
 	pop r1
 	pop r0
 	rts
-
-
-; recebe r0 = numero da capivara ; r1 = capiPos(Dir) r2 = nova posicao (Dir) dela
-; retorna em r2 o valor 100 se nao é para mover a capivara
-; ou retorna em r2 a propria posicao, se ela pode se mover
-testeColisaoCapisDir:
-	push r3
-	push r4
-
-	
-	loadn r4, #0 ; r1 = i
-
-	testeColiCapisDirLoop:
-		cmp r0, r4 ; nao devo testar a capivara com ela mesma
-		jeq testeColiCapisDirContinue
-
-		add r3, r1, r4
-		loadi r3, r3 ; r3 = capivarasPosX[i]
-		
-		inc r3
-		cmp r3, r2 ; lado neutro da capivara com positivo da outra
-		dec r3
-		jeq colidiuCapisDir
-		inc r2
-		cmp r2, r3 ; lado positivo da capivara com neutro da outra
-		dec r2
-		jeq colidiuCapisDir
-
-
-	testeColiCapisDirContinue:
-		inc r4
-		loadn r3, #5
-		cmp r4, r3
-		jne testeColiCapisDirLoop
-
-		jmp testeColiDirExit
-
-colidiuCapisDir:
-	loadn r2, #100
-
-testeColiDirExit:
-	pop r4
-	pop r3
-	rts
-
 ;--
