@@ -132,7 +132,7 @@ skipPlayer:
 
 	; capivara move a cada 1000 loops
 
-	loadn r0, #200
+	loadn r0, #808
 	mod r0, r7, r0
 	loadn r1, #0
 	cmp r1, r0
@@ -146,8 +146,10 @@ skipCapivara:
 
 	; capivara spawn
 
-	loadn r0, #800
-	cmp r7, r0
+	loadn r0, #3000
+	mod r0, r7, r0
+	loadn r1, #0
+	cmp r1, r0
 	jne skipCapivaraSpawn
 
 	call capivaraSpawn
