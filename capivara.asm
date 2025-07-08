@@ -45,7 +45,7 @@ playerDir: var #1
 tiroPosX: var #1
 tiroPosY: var #1
 tiroFlag: var #1
-
+tiroDir: var #1
 posicaoMaca: var #1
 	static posicaoMaca + #0,#0
 pontuacao: var #1
@@ -929,7 +929,7 @@ gerarTiro:
 		mul r1,r1,r4
 		cmp r1,r0
 		jeq gerarTiroExit
-		loadn r2,#'-'
+		loadn r2,#25
 		call desenhaTiro
 		call delay
 		jmp moveBulletLeft
@@ -945,7 +945,7 @@ gerarTiro:
 		mul r1,r1,r4
 		cmp r1,r0
 		jeq gerarTiroExit
-		loadn r2,#'-'
+		loadn r2,#25
 		call desenhaTiro
 		call delay
 		jmp moveBulletRight
@@ -1070,5 +1070,6 @@ pegarMaca:
 	loadn r4, #2000
 	store posicaoMaca,r4
 	jmp pegarMacaFim
+
 
 	
