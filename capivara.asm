@@ -725,6 +725,7 @@ moveSingleCapi:
 	push r4
 	push r5
 
+
 	mov r5, r0
 	loadn r0, #capivarasPosX
 	add r0, r0, r5
@@ -738,8 +739,8 @@ moveSingleCapi:
 	loadn r1, #capivarasPosX
 	loadn r4, #capivarasDir
 
-	add r1, r0, r1 ; r1 = &capiPosX[i]
-	loadi r2, r1 ; r2 = capivarasPosX[i]
+	add r2, r0, r1 ; r2 = &capiPosX[i]
+	loadi r2, r2 ; r2 = capivarasPosX[i]
 
 	add r4, r4, r0 ; r4 = &capiDir[i]
 	loadi r5, r4 ; r5 = capiDir[i]
@@ -752,6 +753,15 @@ moveSingleCapi:
 
 	; se capi PosX > playerPosX, mover esquerda
 	dec r2
+
+	; apenas move se não há nenhuma outra capivara no lugar
+	; testeColisaoCapis retorna r2 = 100 se nao pode mover
+	call testeColisaoCapisDir
+	loadn r3, #100
+	cmp r2, r3
+	jeq capiXParado
+
+	add r1, r1, r0 ; &capiPosX[i]
 	storei r1, r2 ; capiPosX[i]--
 
 	loadn r1, #1
@@ -760,6 +770,15 @@ moveSingleCapi:
 
 capiMoverDireita:
 	inc r2
+
+	; apenas move se não há nenhuma outra capivara no lugar
+	; testeColisaoCapis retorna r2 = 100 se nao pode mover
+	call testeColisaoCapisDir
+	loadn r3, #100
+	cmp r2, r3
+	jeq capiXParado
+
+	add r1, r1, r0 ; &capiPosX[i]
 	storei r1, r2 ; capiPosX[i]++
 
 	loadn r1, #0
@@ -769,8 +788,8 @@ capiXParado:
 	
 	; mover em Y
 	loadn r1, #capivarasPosY
-	add r1, r0, r1 ; &capivarasPosY[i]
-	loadi r2, r1 ; capiPosY[i]
+	add r2, r1, r0 ; &capivarasPosY[i]
+	loadi r2, r2 ; capiPosY[i]
 
 	load r3, playerPosY
 
@@ -780,22 +799,38 @@ capiXParado:
 
 	;mover cima
 	dec r2
+
+	call testeColisaoCapisDir
+	loadn r3, #100
+	cmp r3, r2
+	jeq capiYParado
+
+	add r1, r1, r0
 	storei r1, r2
 	jmp capiYParado
 
 capiMoverBaixo:
 	inc r2
+
+	call testeColisaoCapisDir
+	loadn r3, #100
+	cmp r3, r2
+	jeq capiYParado
+
+	add r1, r1, r0
 	storei r1, r2
 
 capiYParado:
-	
-	mov r1, r2 ; r1 = posY
+
+	loadn r1, #capivarasPosY
+	add r1, r1, r0
+	loadi r1, r1 ; r1 = capiPosY[i]
 	loadn r2, #capivarasDir
 	add r2, r2, r0
-	loadi r2, r2 ; r2 = dir
+	loadi r2, r2 ; r2 = capiDir[i]
 	loadn r3, #capivarasPosX
 	add r3, r3, r0
-	loadi r0, r3; r0 = posX
+	loadi r0, r3 ; r0 = capiPosX[i]
 	loadn r3, #257 ; r3 = primeiro caractere = capivara marrom
 
 	call printPersonagem
@@ -806,5 +841,50 @@ capiYParado:
 	pop r2
 	pop r1
 	pop r0
-	rts	
+	rts
+
+
+; recebe r0 = numero da capivara ; r1 = capiPos(Dir) r2 = nova posicao (Dir) dela
+; retorna em r2 o valor 100 se nao é para mover a capivara
+; ou retorna em r2 a propria posicao, se ela pode se mover
+testeColisaoCapisDir:
+	push r3
+	push r4
+
+	
+	loadn r4, #0 ; r1 = i
+
+	testeColiCapisDirLoop:
+		cmp r0, r4 ; nao devo testar a capivara com ela mesma
+		jeq testeColiCapisDirContinue
+
+		add r3, r1, r4
+		loadi r3, r3 ; r3 = capivarasPosX[i]
+		
+		inc r3
+		cmp r3, r2 ; lado neutro da capivara com positivo da outra
+		dec r3
+		jeq colidiuCapisDir
+		inc r2
+		cmp r2, r3 ; lado positivo da capivara com neutro da outra
+		dec r2
+		jeq colidiuCapisDir
+
+
+	testeColiCapisDirContinue:
+		inc r4
+		loadn r3, #5
+		cmp r4, r3
+		jne testeColiCapisDirLoop
+
+		jmp testeColiDirExit
+
+colidiuCapisDir:
+	loadn r2, #100
+
+testeColiDirExit:
+	pop r4
+	pop r3
+	rts
+
 ;--
