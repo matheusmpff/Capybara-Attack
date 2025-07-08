@@ -41,14 +41,23 @@ playerPosY: var #1
 ; PARA TODOS OS PERSONAGENS: dir -> left = 1 ; right = 0 ;
 
 playerDir: var #1
+
+teclaApertada: var #1
 	
 tiroPosX: var #1
+	static tiroPosX + #0, #100
+
 tiroPosY: var #1
-tiroFlag: var #1
+	static tiroPosY + #0, #100
+
 tiroDir: var #1
+
 posicaoMaca: var #1
 	static posicaoMaca + #0,#0
+
 pontuacao: var #1
+
+
 ; quando a posicao eh 100, capivara nao esta viva ainda
 capivarasPosX: var #5
 	static capivarasPosX + #0, #100
@@ -66,6 +75,9 @@ capivarasPosY: var #5
 capivarasDir: var #5
 
 
+
+
+
 main:
 	call apagaTela
 	call waitUserStart
@@ -80,6 +92,17 @@ resetTimer:
 
 controlLoop:
 
+	; lidar com o movimento do tiro
+	loadn r0, #30
+	mod r0, r7, r0
+	loadn r1, #0
+	cmp r1, r0
+	jne skipTiro
+
+	call moveTiro
+
+skipTiro:
+
 	; apenas move o jogador a cada 100 loops
 
 	loadn r0, #100
@@ -88,14 +111,27 @@ controlLoop:
 	cmp r1, r0
 	jne skipPlayer
 
-	call movePlayer
+	inchar r0
+	store teclaApertada, r0
 
-	call colisaoMorte
+	loadn r1, #32
+	cmp r0, r1
+	jne movimentoMonstruoso
+
+		; se a tecla é espaço, da o tiro
+		call gerarTiro
+		jmp skipPlayer
+
+	movimentoMonstruoso:
+
+		call movePlayer
+
+		call colisaoMorte
 
 skipPlayer:
 
 
-	; capivara move a cada 400 loops
+	; capivara move a cada 1000 loops
 
 	loadn r0, #1000
 	mod r0, r7, r0
@@ -287,7 +323,9 @@ movePlayer: ;recebe o input do jogador e move o personagem
 	push r5
 
 	
-	inchar r0 ; r0 = input
+	load r0, teclaApertada ; r0 = input
+	loadn r1, #255
+	store teclaApertada, r1 ; da clear no input da memoria
 
 	; os playerMove<Dir> nao devem usar r4 e r5
 	load r4, playerPosX
@@ -929,92 +967,138 @@ gerarTiro:
 	push r1
 	push r2
 	push r3
-	push r4
-	push r5
 	
-	load r0,playerPosX
-	load r1,playerPosY
-	load r3,playerDir
-	inc r0;para não apagar o jogador
+	load r0, playerPosX
+	load r1, playerPosY
+	load r2, playerDir
+
+	loadn r3, #1
+	cmp r2, r3
+	jeq gerarTiroDireita
+
+		dec r0
+		loadn r2, #1
+		jmp gerarTiroEsquerda
 	
+	gerarTiroDireita:
+		inc r0 ; aparecer o tiro a esquerda
+		inc r0
+		loadn r2, #0
+	
+gerarTiroEsquerda:
+
+	; guardar na memoria a pos do tiro
 	store tiroPosX, r0
 	store tiroPosY, r1
+	store tiroDir, r2
 	
-	load r4, numCharLine
-	mul r1, r1, r4 ; num de pixels para mover na vertical
+	; calcular posicao absoluta do tiro
+	load r3, numCharLine
+	mul r1, r1, r3 ; num de pixels para mover na vertical
 	add r0, r0, r1 ; posicao absoluta do tiro
-	
-	loadn r5, #0
-	cmp r3,r5
+
+	; printar bala
+	loadn r1, #2073 ; tiro cinza
+	outchar r1, r0
+
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+;--
+
+
+moveTiro:
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+
+	load r0, tiroPosX
+	load r1, tiroPosY
+	load r2, tiroDir
+
+	; se tiro nao exite, n faz nada
+	loadn r4, #100
+	cmp r0, r4
+	jeq moveTiroExit
+
+	load r3, numCharLine
+	mul r3, r1, r3
+	add r3, r0, r3 ; r3 = posicao absoluta da bala
+
+	loadn r4, #0
+	outchar r4, r3 ; apagar a bala
+
+	; r4 = direcao direita
+	cmp r2, r4
 	jeq moveBulletRight
-	
-	moveBulletLeft:
-		loadn r2,#0
-		call apagaTiro
-		dec r0 ; muda posicao
-		load r1,tiroPosY
-		loadn r4, #40
-		mul r1,r1,r4
-		cmp r1,r0
-		jeq gerarTiroExit
-		loadn r2,#25
-		call desenhaTiro
-		call delay
-		jmp moveBulletLeft
-		
-	
-	moveBulletRight:
-		loadn r2,#0
-		call apagaTiro
-		inc r0;; mudanca da posicao
-		load r1,tiroPosY
-		inc r1
-		loadn r4, #40
-		mul r1,r1,r4
-		cmp r1,r0
-		jeq gerarTiroExit
-		loadn r2,#25
-		call desenhaTiro
-		call delay
-		jmp moveBulletRight
-	gerarTiroExit:		
-	pop r5
+
+
+	; mover a bala para a esquerda
+
+	cmp r0, r4 ; r4 == 0
+	jne moveBulletLeft
+
+	; se a bala já esta na esquerda, apaga ela
+	loadn r0, #100
+	jmp moveBulletRightSkip
+
+moveBulletLeft:
+
+	dec r0 ; muda posicao para a esquerda
+	dec r3 ; posicao absoluta
+
+	jmp moveBulletRightSkip
+
+moveBulletRight:
+
+	load r4, numCharLine
+	dec r4
+	cmp r0, r4
+	jne tiroMoveDireita
+
+	; se o tiro ja esta na direita, apaga ela
+	loadn r0, #100
+	jmp moveBulletRightSkip
+
+tiroMoveDireita:
+
+	inc r0 ; muda posicao para a direita
+	inc r3 ; posicao absoluta
+
+moveBulletRightSkip:
+
+	store tiroPosX, r0
+
+	loadn r4, #100
+	cmp r0, r4
+	jeq moveTiroExit
+
+	; logica para matar as capivaras
+	call morteCapivara
+
+	loadn r4, #100
+	load r0, tiroPosX
+	cmp r0, r4
+	jeq moveTiroExit
+
+	; se o tiro ainda existe, printa ele
+	loadn r1, #2073 ; tiro cinza
+	outchar r1, r3
+
+moveTiroExit:
 	pop r4
 	pop r3
 	pop r2
 	pop r1
 	pop r0
-	
 	rts
+;--
 
 
-apagaTiro:
-	outchar r2, r0      ; r2 a letra e r0 posição
-	rts
-
-	
-desenhaTiro:
-	outchar r2,r0
-	rts
-
-
-
-delay: 
-	push r0
-	push r1
-	
-	loadn r1, #10
-	Delay_loop2:
-	loadn r0, #64000
-	Delay_loop1:
-		dec r0
-		jnz Delay_loop1
-	dec r1
-	jnz Delay_loop2
-	
-	pop r1
-	pop r0
-	rts
 
 gerarMaca:
 	push r1
@@ -1023,9 +1107,8 @@ gerarMaca:
 	push r4
 	
 	
-	
-	;logica para aparecer a maca
-	loadn r3, #0	
+	; logica para aparecer a maca
+	loadn r3, #0
 	loadn r1, #2011
 	mod r1, r7, r1
 	
@@ -1037,8 +1120,10 @@ gerarMaca:
 	cmp r2, r4
 	jeq semApagar
 	outchar r3,r2;
-	semApagar:
-	;logica de mostrar a maca 
+
+semApagar:
+
+	; logica de mostrar a maca 
 	loadn r3,#1200;numero de bytes para achar a posicao de gerar a maca
 	mod r4,r7,r3
 	
@@ -1046,14 +1131,17 @@ gerarMaca:
 	
 	loadn r3,#24 ;char da maca	
 	outchar r3,r4
-	gerarMacaFim:
+
+gerarMacaFim:
+
 	pop r4
 	pop r3
 	pop r2 
 	pop r1
 	
 	rts
-	
+
+
 pegarMaca:
 	push r1
 	push r2
@@ -1099,5 +1187,89 @@ pegarMaca:
 	store posicaoMaca,r4
 	jmp pegarMacaFim
 
+;--
 
+
+morteCapivara:
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+	push r5
+	push r6
+	push r7
+
+	load r0, tiroPosX
+	load r1, tiroPosY
+
+	load r2, capivarasPosX
+	load r3, capivarasPosY
+
+	loadn r4, #0 ; i - iterador
+
+morteCapiLoop:
+	add r5, r2, r4
+	loadi r5, r5 ; r5 = capPosX[i]
+
+	cmp r0, r5
+	jeq talvezAcertarCapivara
+
+	inc r5
+	cmp r0, r5 ; x do tiro com lado direito da capi
+	jne morteCapiContinue
+
+talvezAcertarCapivara:
+	add r5, r3, r4
+	loadi r5, r5 ; r5 = capPosY[i]
+
+	cmp r1, r5
+	jeq matarCapivara
 	
+	inc r5
+	cmp r1, r5
+	jne morteCapiContinue
+
+matarCapivara:
+
+	; matar capivara
+	loadn r5, #100
+	store tiroPosX, r5
+	
+	load r6, numCharLine
+	mul r6, r1, r6
+	add r6, r6, r0 ; r6 = posicao absoluta do tiro
+	loadn r7, #0
+	outchar r7, r6 ; apaga tiro
+
+	add r2, r2, r4 ; &capPosX[i]
+	add r3, r3, r4 ; &capPosY[i]
+	loadi r0, r2 ; r0 = posX
+	loadi r1, r3 ; r1 = posY
+
+	call apagaQuadrado
+
+	loadn r5, #100
+	storei r2, r5
+	storei r3, r5
+
+	jmp morteCapiBreak
+
+morteCapiContinue:
+	inc r4
+	loadn r5, #5
+	cmp r4, r5
+	jne morteCapiLoop
+
+morteCapiBreak:
+
+	pop r7
+	pop r6
+	pop r5
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+
