@@ -104,7 +104,7 @@ skipTiro:
 
 	; apenas move o jogador a cada 100 loops
 
-	loadn r0, #90
+	loadn r0, #40
 	mod r0, r7, r0
 	loadn r1, #0
 	cmp r1, r0
@@ -132,7 +132,7 @@ skipPlayer:
 
 	; capivara move a cada 1000 loops
 
-	loadn r0, #808
+	loadn r0, #608
 	mod r0, r7, r0
 	loadn r1, #0
 	cmp r1, r0
@@ -146,7 +146,7 @@ skipCapivara:
 
 	; capivara spawn
 
-	loadn r0, #3000
+	loadn r0, #3100
 	mod r0, r7, r0
 	loadn r1, #0
 	cmp r1, r0
@@ -458,18 +458,38 @@ apagaQuadrado:
 	; apaga superior esquerdo
 	loadn r1, #' '
 	outchar r1, r0
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 	; apaga superior direito
 	inc r0
 	outchar r1, r0
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 	; apaga inferior direito
 	add r0, r0, r2
 	outchar r1, r0
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 	; apaga inferior esquerdo
 	dec r0
 	outchar r1, r0
+	nop
+	nop
 
 	pop r2
 	pop r1
@@ -637,22 +657,42 @@ printPersonagem:
 	add r3, r3, r1
 
 	outchar r3, r0
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 	; imprime superior direito
 	inc r0
 	inc r3
 	outchar r3, r0
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 	; imprime inferior direito
 	add r0, r0, r4
 	inc r3
 	inc r3
 	outchar r3, r0
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 	; imprime inferior esquerdo
 	dec r0
 	dec r3
 	outchar r3, r0
+	nop
+	nop
 
 	pop r4
 	pop r3
