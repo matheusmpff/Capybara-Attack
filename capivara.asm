@@ -72,26 +72,40 @@ iniciarJogo:
 resetTimer:
 	loadn r7, #0 ; timer global
 
-	playerControlLoop:
+controlLoop:
+
+	; apenas move o jogador a cada 100 loops
+
+	loadn r0, #100
+	mod r0, r7, r0
+	loadn r1, #0
+	cmp r1, r0
+	jne skipPlayer
+
+	call movePlayer
+
+	call colisaoMorte
+
+skipPlayer:
 
 
-		; apenas move o jogador a cada 100 loops
-		loadn r0, #100
-		mod r0, r7, r0
-		loadn r1, #0
-		cmp r1, r0
-		jne skipPlayer
+	; capivara move a cada 400 loops
 
-		call movePlayer
+	loadn r0, #1000
+	mod r0, r7, r0
+	loadn r1, #0
+	cmp r1, r0
+	jne skipCapivara
 
-		call colisaoMorte
+	call moveCapivaras
+	
+	call colisaoMorte
 
-
-	skipPlayer:
+skipCapivara:
 
 	; capivara spawn
 
-	loadn r0, #40000
+	loadn r0, #20000
 	cmp r7, r0
 	jne skipCapivaraSpawn
 
@@ -114,7 +128,7 @@ resetTimer:
 		jne slowDownLoop
 
 
-	jmp playerControlLoop
+	jmp controlLoop
 
 
 
@@ -667,3 +681,130 @@ colisaoMatar:
 ;--
 
 
+moveCapivaras:
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+
+	loadn r0, #0 ; i
+	loadn r1, #4 ; numero de capivaras - 1
+	loadn r2, #100 ; valor nulo da capivara
+	loadn r3, #capivarasPosX
+
+	; para todas as capivaras, se ela existir, move ela
+	moveCapiLoop:
+		add r4, r3, r0 ; capivarasPosX[i]
+		loadi r4, r4 ; r4 =
+		cmp r4, r2 ; if capi == 100 ; pula
+		jeq moveCapiLoopContinue
+
+		; passo para a função r0 = i, o número da capivara
+		call moveSingleCapi
+
+	moveCapiLoopContinue:
+		cmp r0, r1 ; while i < 5
+		inc r0
+		jne moveCapiLoop
+
+	
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts
+
+; r0 = número da capivara
+moveSingleCapi:
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+	push r5
+
+	mov r5, r0
+	loadn r0, #capivarasPosX
+	add r0, r0, r5
+	loadi r0, r0; r0 = posX
+	loadn r1, #capivarasPosY
+	add r1, r1, r5
+	loadi r1, r1 ; r1 = posY
+	call apagaQuadrado
+	mov r0, r5
+
+	loadn r1, #capivarasPosX
+	loadn r4, #capivarasDir
+
+	add r1, r0, r1 ; r1 = &capiPosX[i]
+	loadi r2, r1 ; r2 = capivarasPosX[i]
+
+	add r4, r4, r0 ; r4 = &capiDir[i]
+	loadi r5, r4 ; r5 = capiDir[i]
+	
+	load r3, playerPosX
+	
+	cmp r2, r3
+	jle capiMoverDireita ; se capiPosX < playerPosX
+	jeq capiXParado ; se capiPosX == playerPosX
+
+	; se capi PosX > playerPosX, mover esquerda
+	dec r2
+	storei r1, r2 ; capiPosX[i]--
+
+	loadn r1, #1
+	storei r4, r1 ; dir esquerda
+	jmp capiXParado
+
+capiMoverDireita:
+	inc r2
+	storei r1, r2 ; capiPosX[i]++
+
+	loadn r1, #0
+	storei r4, r1
+
+capiXParado:
+	
+	; mover em Y
+	loadn r1, #capivarasPosY
+	add r1, r0, r1 ; &capivarasPosY[i]
+	loadi r2, r1 ; capiPosY[i]
+
+	load r3, playerPosY
+
+	cmp r2, r3
+	jle capiMoverBaixo
+	jeq capiYParado
+
+	;mover cima
+	dec r2
+	storei r1, r2
+	jmp capiYParado
+
+capiMoverBaixo:
+	inc r2
+	storei r1, r2
+
+capiYParado:
+	
+	mov r1, r2 ; r1 = posY
+	loadn r2, #capivarasDir
+	add r2, r2, r0
+	loadi r2, r2 ; r2 = dir
+	loadn r3, #capivarasPosX
+	add r3, r3, r0
+	loadi r0, r3; r0 = posX
+	loadn r3, #257 ; r3 = primeiro caractere = capivara marrom
+
+	call printPersonagem
+
+	pop r5
+	pop r4
+	pop r3
+	pop r2
+	pop r1
+	pop r0
+	rts	
+;--
