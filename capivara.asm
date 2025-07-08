@@ -83,7 +83,6 @@ main:
 	call waitUserStart
 
 iniciarJogo:
-	call initializeVariables
 	call apagaTela
 	call movePlayerPrint
 
@@ -147,7 +146,7 @@ skipCapivara:
 
 	; capivara spawn
 
-	loadn r0, #20000
+	loadn r0, #5000
 	cmp r7, r0
 	jne skipCapivaraSpawn
 
@@ -175,9 +174,10 @@ skipCapivara:
 
 
 
-	endGame:
+endGame:
 	call printTelaFinalScreen
-	call mostrarPontuacao
+;	call mostrarPontuacao
+	call initializeVariables
 	call waitUserStart ; recebe em r0 o input
 
 	loadn r1, #'e' ; exit
@@ -185,7 +185,6 @@ skipCapivara:
 	jne iniciarJogo
 
 	halt
-
 ;--
 
 
@@ -1204,8 +1203,8 @@ morteCapivara:
 	load r0, tiroPosX
 	load r1, tiroPosY
 
-	load r2, capivarasPosX
-	load r3, capivarasPosY
+	loadn r2, #capivarasPosX
+	loadn r3, #capivarasPosY
 
 	loadn r4, #0 ; i - iterador
 
@@ -3883,5 +3882,4 @@ printtelaInicioScreen:
   pop R1
   pop R0
   rts
->>>>>>> bca801bef4f9be64c97fdf0132f04ef89fb22ee5
 
