@@ -17,7 +17,7 @@ aparecem na tela que aumentam de 10 em 10 pontos o score quando coletadas.
 
 <p align="center">
   <img src="telaInicio.png" alt="Tela inicial do jogo" width="300"/>
-  <img src="./CapybaraAttack/assets/tela_final.png" alt="Tela final do jogo" width="300"/>
+  <img src="TelaFinal.png" alt="Tela final do jogo" width="300"/>
 </p>
 
 <p align="center">
