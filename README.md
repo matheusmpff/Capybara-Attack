@@ -6,18 +6,37 @@ Este repositório contém os projetos desenvolvidos durante a disciplina **SSC01
 ## 📂 Projetos
 
 ### 🧠 Processador
-Implementação de um processador simples, com suporte a operações aritméticas, controle de fluxo e acesso à memória.
+Construção do Hardware do Processador em VHDL na FPGAs, com suporte a operações aritméticas, controle de fluxo e acesso à memória.
 
 
 ### 🎮 Capybara Attack
-Jogo desenvolvido em Assembly para o processador da disciplina, onde o jogador controla um caçador que precisa se defender das capivaraas que o atacam, com base em inputs e lógica de movimentação. A movimentação do personagem é feita pelas teclas A,W,S,D e o tiro do caçador pode ser feito apertando a tecla de espaço. No jogo o objetivo é o caçador ficar o máximo de tempo vivo matando as capivaras que surgem e coletando as maças que
-aparecem na tela que aumentam de 10 em 10 pontos o score quando coletadas.
+
+
+#### 🧾 Objetivo do Jogo
+
+O jogo foi desenvolvido em Assembly para o processador da disciplina, onde o jogador controla um caçador que precisa se defender das capivaras que o atacam.  
+O objetivo é sobreviver o máximo de tempo possível, eliminando as capivaras que surgem na tela e coletando maçãs.  
+Cada maçã coletada aumenta o score do jogador em 10 pontos.
+
+
+#### 🎮 Jogabilidade
+
+A movimentação do personagem é feita por meio das teclas:
+
+- `W` - Cima
+- `A` - Esquerda
+- `S` - Baixo
+- `D` - Direita
+
+O tiro do caçador é disparado ao pressionar a tecla `SPACE`.
+
+As capivaras surgem em diferentes posições e se movem em direção ao jogador, podendo ter até 5 capivaras presentes na tela ao mesmo tempo. O jogador deve evitá-las ou eliminá-las com tiros, ao mesmo tempo que coleta maçãs para aumentar sua pontuação.
 
 ### 🖼️ Capturas de tela do jogo
 
 <p align="center">
   <img src="telaInicio.png" alt="Tela inicial do jogo" width="300"/>
-  <img src="TelaFinal.png" alt="Tela final do jogo" width="300"/>
+  <img src="TelaFim.png" alt="Tela final do jogo" width="300"/>
 </p>
 
 <p align="center">
