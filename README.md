@@ -50,6 +50,6 @@ As capivaras surgem em diferentes posições e se movem em direção ao jogador,
 ## 📚 Autores
 
 - **Nome:** Matheus Muzza Pires Ferreira **NUSP:** 15479468
-- **Nome:** Matheus Muzza Pires Ferreira **NUSP:** 15479468
+- **Nome:** Jo˜ao Pedro Castelli         **NUSP:** 15463450
 - **Curso:** Ciência da Computação - ICMC/USP
 
