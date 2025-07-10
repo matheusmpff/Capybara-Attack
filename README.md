@@ -35,7 +35,7 @@ As capivaras surgem em diferentes posições e se movem em direção ao jogador,
 ### 🖼️ Capturas de tela do jogo
 
 <p align="center">
-  <img src="./imagens/stelaInicio.png" alt="Tela inicial do jogo" width="300"/>
+  <img src="./imagens/telaInicio.png" alt="Tela inicial do jogo" width="300"/>
   <img src="./imagens/TelaFim.png" alt="Tela final do jogo" width="300"/>
 </p>
 
