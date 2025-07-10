@@ -35,8 +35,8 @@ As capivaras surgem em diferentes posições e se movem em direção ao jogador,
 ### 🖼️ Capturas de tela do jogo
 
 <p align="center">
-  <img src="telaInicio.png" alt="Tela inicial do jogo" width="300"/>
-  <img src="TelaFim.png" alt="Tela final do jogo" width="300"/>
+  <img src="./imagens/stelaInicio.png" alt="Tela inicial do jogo" width="300"/>
+  <img src="./imagens/TelaFim.png" alt="Tela final do jogo" width="300"/>
 </p>
 
 <p align="center">
@@ -50,6 +50,6 @@ As capivaras surgem em diferentes posições e se movem em direção ao jogador,
 ## 📚 Autores
 
 - **Nome:** Matheus Muzza Pires Ferreira **NUSP:** 15479468
-- **Nome:** Jo˜ao Pedro Castelli         **NUSP:** 15463450
+- **Nome:** João Pedro Castelli         **NUSP:** 15463450
 - **Curso:** Ciência da Computação - ICMC/USP
 
