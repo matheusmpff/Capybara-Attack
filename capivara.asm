@@ -266,10 +266,20 @@ apagaTela:
 
 ;; reinicializa as posições de memória com os valores iniciais delas
 initializeVariables:
+	; jogador
 	loadn r0, #20
 	store playerPosX, r0
 	loadn r0, #15
 	store playerPosY, r0
+
+	; tiro
+	loadn r0, #100
+	store tiroPosX, r0
+	store tiroPosY, r0
+
+	;pontuacao
+	loadn r0, #0
+	store pontuacao, r0
 
 	loadn r0, #0 ; i - iterador
 	loadn r1, #5
@@ -1234,6 +1244,7 @@ gerarMacaFim:
 	pop r1
 	
 	rts
+;--
 
 
 pegarMaca:
@@ -1346,6 +1357,12 @@ matarCapivara:
 	loadn r5, #100
 	storei r2, r5
 	storei r3, r5
+
+	; adicionar 5 no score
+	load r7, pontuacao
+	loadn r6, #5
+	add r7, r7, r6
+	store pontuacao, r7
 
 	jmp morteCapiBreak
 
