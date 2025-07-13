@@ -53,10 +53,12 @@ tiroPosY: var #1
 tiroDir: var #1
 
 posicaoMaca: var #1
-	static posicaoMaca + #0,#0
+	static posicaoMaca + #0, #0
 
 pontuacao: var #1
 
+velocidadeLoop: var #1
+	static velocidadeLoop + #0, #2000
 
 ; quando a posicao eh 100, capivara nao esta viva ainda
 capivarasPosX: var #5
@@ -73,7 +75,6 @@ capivarasPosY: var #5
 	static capivarasPosY + #4, #100
 
 capivarasDir: var #5
-
 
 
 
@@ -114,6 +115,15 @@ skipTiro:
 	call inputFPGA ; retorna em r0 o input
 	store teclaApertada, r0
 
+	; aumentar ou diminuir a velocidade do jogo
+	loadn r1, #'+'
+	cmp r0, r1
+	jeq velocidadePlus
+	loadn r1, #'-'
+	cmp r0, r1
+	jeq velocidadeMinus
+
+	; testa se realiza tiro ou movimento do personagem
 	loadn r1, #32
 	cmp r0, r1
 	jne movimentoMonstruoso
@@ -125,13 +135,33 @@ skipTiro:
 	movimentoMonstruoso:
 
 		call movePlayer
-
 		call colisaoMorte
+
+		jmp skipPlayer
+
+	velocidadePlus:
+		; diminui a variável velocidadeLoop por 500
+		load r2, velocidadeLoop
+		loadn r3, #500
+
+		cmp r2, r3 ; se velocidade já é 500, não diminui mais
+		jeq skipPlayer
+		sub r2, r2, r3
+		store velocidadeLoop, r2
+
+		jmp skipPlayer
+
+	velocidadeMinus:
+		; aumenta a variável velocidadeLoop por 500
+		load r2, velocidadeLoop
+		loadn r3, #500
+		add r2, r2, r3
+		store velocidadeLoop, r2
+
 
 skipPlayer:
 
-
-	; capivara move a cada 1000 loops
+	; capivara move a cada 608 loops
 
 	loadn r0, #608
 	mod r0, r7, r0
@@ -147,7 +177,7 @@ skipCapivara:
 
 	; capivara spawn
 
-	loadn r0, #3100
+	loadn r0, #4100
 	mod r0, r7, r0
 	loadn r1, #0
 	cmp r1, r0
@@ -155,23 +185,25 @@ skipCapivara:
 
 	call capivaraSpawn
 
-	skipCapivaraSpawn:
+skipCapivaraSpawn:
+
 	call gerarMaca
 	call pegarMaca
-	; reseta o timer global
-	inc r7
-	loadn r0, #50000
-	cmp r7, r0
-	jeq resetTimer
+
 
 	; pausa para deixar o programa mais lento
 	loadn r0, #0
-	loadn r1, #500
+	load r1, velocidadeLoop
 	slowDownLoop:
 		inc r0
 		cmp r0, r1
 		jne slowDownLoop
 
+	; reseta o timer global
+	inc r7
+	loadn r0, #50000
+	cmp r7, r0
+	jeq resetTimer
 
 	jmp controlLoop
 
