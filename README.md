@@ -43,7 +43,9 @@ As capivaras surgem em diferentes posições e se movem em direção ao jogador,
   <em>Tela inicial do jogo</em> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <em>Tela final do jogo</em>
 </p>
-
+ 
+### Vídeo explicativo
+https://youtu.be/WCKNNnHiErc
 
 ---
 
