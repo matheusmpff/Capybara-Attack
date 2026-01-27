@@ -76,7 +76,8 @@ capivarasPosY: var #5
 
 capivarasDir: var #5
 
-
+capivaraTurno: var #1
+	static capivaraTurno, #0
 
 
 main:
@@ -187,6 +188,7 @@ skipCapivara:
 
 skipCapivaraSpawn:
 
+	; controle do spawn e pontuacao da maca
 	call gerarMaca
 	call pegarMaca
 
@@ -558,15 +560,18 @@ capivaraSpawn:
 	push r3
 	push r4
 	push r5
+	push r6
+
+	load r6, capivaraTurno ; nao utilizado
 
 	loadn r0, #0 ; int i do for lop
-	loadn r1, #4
+	loadn r1, #4 ; numero de capivaras - 1
 	loadn r2, #capivarasPosX ; array das capivaras
 	loadn r3, #capivarasPosY
 	loadn r4, #100 ; capivara para spawnar (100 == nenhuma)
 
 	capivaraSpawnTryNext:
-		add r5, r2, r0 ; capivara[i]
+		add r5, r2, r5 ; capivara[i]
 		loadi r5, r5 ; r5 = capivara[i]
 
 		cmp r5, r4
@@ -666,6 +671,7 @@ capivaraSpawn:
 		call printPersonagem
 
 capiSpawnExit:
+	pop r6
 	pop r5
 	pop r4
 	pop r3
@@ -1213,7 +1219,7 @@ gerarMaca:
 	
 	; logica para aparecer a maca
 	loadn r3, #0
-	loadn r1, #2011
+	loadn r1, #7919 ; numero primo
 	mod r1, r7, r1
 	
 	cmp r1,r3
@@ -1228,12 +1234,14 @@ gerarMaca:
 semApagar:
 
 	; logica de mostrar a maca 
-	loadn r3,#1200;numero de bytes para achar a posicao de gerar a maca
-	mod r4,r7,r3
+	loadn r3,#1200 ; numero de bytes para achar a posicao de gerar a maca
+	load r1, pontuacao ; soma pontuacao ao timer para adicinar aleatoriedade
+	add r1, r1,r7
+	mod r4,r1,r3
 	
-	store posicaoMaca, r4; atualiza a posicao da maca
+	store posicaoMaca, r4 ; atualiza a posicao da maca
 	
-	loadn r3,#2328 ;char da maca	
+	loadn r3,#2328 ; char da maca	
 	outchar r3,r4
 
 gerarMacaFim:
