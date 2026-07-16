@@ -77,7 +77,7 @@ capivarasPosY: var #5
 capivarasDir: var #5
 
 capivaraTurno: var #1
-	static capivaraTurno, #0
+	static capivaraTurno + #0, #0
 
 
 main:
@@ -105,7 +105,7 @@ controlLoop:
 
 skipTiro:
 
-	; apenas move o jogador a cada 100 loops
+	; apenas move o jogador a cada 40 loops
 
 	loadn r0, #40
 	mod r0, r7, r0
@@ -301,6 +301,9 @@ initializeVariables:
 		inc r0 ; i++
 		jmp capivaraInitializeLoop
 	initializeExit:
+
+	loadn r0, #0
+	store capivaraTurno, r0
 	rts
 ;--
 
@@ -562,16 +565,18 @@ capivaraSpawn:
 	push r5
 	push r6
 
-	load r6, capivaraTurno ; nao utilizado
 
-	loadn r0, #0 ; int i do for lop
-	loadn r1, #4 ; numero de capivaras - 1
+	load r0, capivaraTurno ; int i do for lop
+	loadn r6, #5 ; numero de capivaras
+	add r1, r6, r0
+	dec r1 ; posição inicial + 4 mod 5
+	mod r1, r1, r6 ; ultima posição do array a ser checada
 	loadn r2, #capivarasPosX ; array das capivaras
 	loadn r3, #capivarasPosY
 	loadn r4, #100 ; capivara para spawnar (100 == nenhuma)
 
 	capivaraSpawnTryNext:
-		add r5, r2, r5 ; capivara[i]
+		add r5, r2, r0 ; capivara[i]
 		loadi r5, r5 ; r5 = capivara[i]
 
 		cmp r5, r4
@@ -581,9 +586,10 @@ capivaraSpawn:
 
 
 	capiSpawnTnElse:
-		cmp r0, r1 ; compara i com 4
+		cmp r0, r1 ; compara i com posição final
 		inc r0
-		jle capivaraSpawnTryNext
+		mod r0, r0, r6
+		jne capivaraSpawnTryNext
 
 		jmp capiSpawnExit
 
@@ -596,6 +602,7 @@ capivaraSpawn:
 		add r5, r5, r0
 
 		; switch da capivara
+		loadn r1, #4
 		cmp r0, r1
 		jeq spawn4
 		loadn r1, #3
@@ -623,6 +630,8 @@ capivaraSpawn:
 		storei r3, r1
 		loadn r2, #0 ; direção
 		storei r2, r5
+		loadn r6, #0
+		store capivaraTurno, r6 ; capivaraTurno = 0
 		jmp capiSpawnBreak
 
 	spawn3:
@@ -634,6 +643,8 @@ capivaraSpawn:
 		storei r3, r1
 		loadn r2, #1 ; direção
 		storei r2, r5
+		loadn r6, #4
+		store capivaraTurno, r6 ; capivaraTurno = 4
 		jmp capiSpawnBreak
 
 	spawn2:
@@ -645,6 +656,8 @@ capivaraSpawn:
 		storei r3, r1
 		loadn r2, #1 ; direção
 		storei r2, r5
+		loadn r6, #3
+		store capivaraTurno, r6 ; capivaraTurno = 3
 		jmp capiSpawnBreak
 
 	spawn1:
@@ -654,6 +667,8 @@ capivaraSpawn:
 		storei r3, r1
 		loadn r2, #0 ; direção
 		storei r2, r5
+		loadn r6, #2
+		store capivaraTurno, r6 ; capivaraTurno = 2
 		jmp capiSpawnBreak
 
 	spawn0:
@@ -664,6 +679,8 @@ capivaraSpawn:
 		storei r3, r1
 		loadn r2, #0 ; direção
 		storei r2, r5
+		loadn r6, #1
+		store capivaraTurno, r6 ; capivaraTurno = 1
 		jmp capiSpawnBreak
 
 	capiSpawnBreak:
